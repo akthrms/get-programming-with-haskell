@@ -2,8 +2,8 @@ module Lesson06.Lib where
 
 -- Q6.1
 
-repaet :: a -> [a]
-repaet x = cycle [x]
+myRepaet :: a -> [a]
+myRepaet x = cycle [x]
 
 -- Q6.2
 
