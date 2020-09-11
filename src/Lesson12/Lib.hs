@@ -71,17 +71,17 @@ showBloodType :: BloodType -> [Char]
 showBloodType (BloodType abo rh) = showABOType abo ++ showRhType rh
 
 patientSummary :: Patient -> [Char]
-patientSummary p =
+patientSummary patient =
   "***************"
     ++ "\nPatient Name: "
-    ++ showName (name p)
+    ++ showName (name patient)
     ++ "\nSex: "
-    ++ showSex (sex p)
+    ++ showSex (sex patient)
     ++ "\nAge: "
-    ++ show (age p)
+    ++ show (age patient)
     ++ "\nHeight: "
-    ++ show (height p)
+    ++ show (height patient)
     ++ "\nWeight: "
-    ++ show (weight p)
+    ++ show (weight patient)
     ++ "\nBlood Type: "
-    ++ showBloodType (bloodType p)
+    ++ showBloodType (bloodType patient)
