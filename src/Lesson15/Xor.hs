@@ -1,4 +1,7 @@
-module Lesson15.Xor where
+module Lesson15.Xor
+  ( xor,
+  )
+where
 
 xorBool :: Bool -> Bool -> Bool
 xorBool value1 value2 = (value1 || value2) && (not (value1 && value2))

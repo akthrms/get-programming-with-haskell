@@ -1,4 +1,9 @@
-module Lesson15.Bits where
+module Lesson15.Bits
+  ( Bits,
+    bitsToChar,
+    charToBits,
+  )
+where
 
 type Bits = [Bool]
 

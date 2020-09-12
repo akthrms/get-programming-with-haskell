@@ -1,4 +1,8 @@
-module Lesson15.Rot13 where
+module Lesson15.Rot13
+  ( charDecoder,
+    charEncoder,
+  )
+where
 
 rotEncoder :: (Bounded a, Enum a) => Int -> a -> a
 rotEncoder size enum =
