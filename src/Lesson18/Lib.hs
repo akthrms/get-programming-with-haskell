@@ -1,4 +1,7 @@
-module Lesson18.Lib where
+module Lesson18.Lib
+  ( Organ,
+  )
+where
 
 import qualified Data.Map as Map
 
