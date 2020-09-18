@@ -59,10 +59,10 @@ data TS a = TS [Int] [Maybe a]
 
 createTS :: [Int] -> [a] -> TS a
 createTS times values =
-  let completeTimes = [minimum times .. maximum times]
-      timeValueMap = Map.fromList $ zip times values
-      extendedValues = map (`Map.lookup` timeValueMap) completeTimes
-   in TS completeTimes extendedValues
+  let times' = [minimum times .. maximum times]
+      tvMap = Map.fromList $ zip times values
+      values' = map (`Map.lookup` tvMap) times'
+   in TS times' values'
 
 fileToTS :: [(Int, a)] -> TS a
 fileToTS tvPairs =
@@ -112,11 +112,11 @@ combineTS (TS [] []) ts2 = ts2
 combineTS ts1 (TS [] []) = ts1
 combineTS (TS t1 v1) (TS t2 v2) =
   let bothTimes = mconcat [t1, t2]
-      completeTimes = [minimum bothTimes .. maximum bothTimes]
-      timeValueMap = foldl insertMaybePair Map.empty $ zip t1 v1
-      updatedMap = foldl insertMaybePair timeValueMap $ zip t2 v2
-      combinedValues = map (`Map.lookup` updatedMap) completeTimes
-   in TS completeTimes combinedValues
+      times' = [minimum bothTimes .. maximum bothTimes]
+      tvMap = foldl insertMaybePair Map.empty $ zip t1 v1
+      tvMap' = foldl insertMaybePair tvMap $ zip t2 v2
+      values' = map (`Map.lookup` tvMap') times'
+   in TS times' values'
 
 instance Semigroup (TS a) where
   (<>) = combineTS
@@ -185,8 +185,9 @@ mean xs =
 meanTS :: Real a => TS a -> Maybe Double
 meanTS (TS _ []) = Nothing
 meanTS (TS times values) =
-  let avg = mean $ map fromJust $ filter isJust values
-   in if all isNothing values then Nothing else Just avg
+  if all isNothing values
+    then Nothing
+    else Just $ mean $ map fromJust $ filter isJust values
 
 {-
 *Lesson20.TimeSeries> meanTS tsAll
@@ -200,10 +201,12 @@ type TSCompareFunc a = ((Int, Maybe a) -> (Int, Maybe a) -> (Int, Maybe a))
 makeTSCompare :: Eq a => CompareFunc a -> TSCompareFunc a
 makeTSCompare func =
   let newFunc (i1, Nothing) (i2, Nothing) = (i1, Nothing)
-      newFunc (_, Nothing) (i2, val2) = (i2, val2)
-      newFunc (i1, val1) (_, Nothing) = (i1, val1)
-      newFunc (i1, Just val1) (i2, Just val2) =
-        if (func val1 val2) == val1 then (i1, Just val1) else (i2, Just val2)
+      newFunc (_, Nothing) (i2, value2) = (i2, value2)
+      newFunc (i1, value1) (_, Nothing) = (i1, value1)
+      newFunc (i1, Just value1) (i2, Just value2) =
+        if (func value1 value2) == value1
+          then (i1, Just value1)
+          else (i2, Just value2)
    in newFunc
 
 {-
@@ -214,8 +217,9 @@ makeTSCompare func =
 compareTS :: Eq a => (a -> a -> a) -> TS a -> Maybe (Int, Maybe a)
 compareTS func (TS [] []) = Nothing
 compareTS func (TS times values) =
-  let best = foldl (makeTSCompare func) (0, Nothing) $ zip times values
-   in if all isNothing values then Nothing else Just best
+  if all isNothing values
+    then Nothing
+    else Just $ foldl (makeTSCompare func) (0, Nothing) $ zip times values
 
 minTS :: Ord a => TS a -> Maybe (Int, Maybe a)
 minTS = compareTS min
@@ -230,10 +234,7 @@ diffPair (Just x) (Just y) = Just (x - y)
 
 diffTS :: Num a => TS a -> TS a
 diffTS (TS [] []) = TS [] []
-diffTS (TS times values) =
-  let shiftValues = tail values
-      diffValues = zipWith diffPair shiftValues values
-   in TS times (Nothing : diffValues)
+diffTS (TS times values) = TS times $ Nothing : zipWith diffPair (tail values) values
 
 {-
 *Lesson20.TimeSeries> meanTS $ diffTS tsAll
@@ -242,20 +243,22 @@ Just 0.6076923076923071
 
 meanMaybe :: Real a => [Maybe a] -> Maybe Double
 meanMaybe vals =
-  let avg = mean $ map fromJust vals
-   in if any isNothing vals then Nothing else Just avg
+  if any isNothing vals
+    then Nothing
+    else Just $ mean $ map fromJust vals
 
 movingAvg :: Real a => [Maybe a] -> Int -> [Maybe Double]
 movingAvg [] n = []
 movingAvg vals n =
-  let nextVals = take n vals
-      restVals = tail vals
-   in if length nextVals == n then (meanMaybe nextVals) : (movingAvg restVals n) else []
+  let nexts = take n vals
+      rests = tail vals
+   in if length nexts == n
+        then (meanMaybe nexts) : (movingAvg rests n)
+        else []
 
 maTS :: Real a => TS a -> Int -> TS Double
 maTS (TS [] []) n = TS [] []
 maTS (TS times values) n =
   let ma = movingAvg values n
       nothings = take (n `div` 2) $ repeat Nothing
-      smoothedValues = mconcat [nothings, ma, nothings]
-   in TS times smoothedValues
+   in TS times $ mconcat [nothings, ma, nothings]
