@@ -194,11 +194,11 @@ meanTS (TS times values) =
 Just 210.5966666666667
 -}
 
-type CompareFunc a = (a -> a -> a)
+type Comparator a = (a -> a -> a)
 
-type TSCompareFunc a = ((Int, Maybe a) -> (Int, Maybe a) -> (Int, Maybe a))
+type TSComparator a = ((Int, Maybe a) -> (Int, Maybe a) -> (Int, Maybe a))
 
-makeTSCompare :: Eq a => CompareFunc a -> TSCompareFunc a
+makeTSCompare :: Eq a => Comparator a -> TSComparator a
 makeTSCompare comparator =
   let newComparator (i1, Nothing) (i2, Nothing) = (i1, Nothing)
       newComparator (i1, v1) (_, Nothing) = (i1, v1)
