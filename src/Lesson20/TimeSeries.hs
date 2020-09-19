@@ -111,8 +111,8 @@ combineTS :: TS a -> TS a -> TS a
 combineTS (TS [] []) ts2 = ts2
 combineTS ts1 (TS [] []) = ts1
 combineTS (TS t1 v1) (TS t2 v2) =
-  let bothTimes = mconcat [t1, t2]
-      times' = [minimum bothTimes .. maximum bothTimes]
+  let times = mconcat [t1, t2]
+      times' = [minimum times .. maximum times]
       tvMap = foldl insertMaybePair Map.empty $ zip t1 v1
       tvMap' = foldl insertMaybePair tvMap $ zip t2 v2
       values' = map (`Map.lookup` tvMap') times'
@@ -199,15 +199,15 @@ type CompareFunc a = (a -> a -> a)
 type TSCompareFunc a = ((Int, Maybe a) -> (Int, Maybe a) -> (Int, Maybe a))
 
 makeTSCompare :: Eq a => CompareFunc a -> TSCompareFunc a
-makeTSCompare func =
-  let newFunc (i1, Nothing) (i2, Nothing) = (i1, Nothing)
-      newFunc (_, Nothing) (i2, value2) = (i2, value2)
-      newFunc (i1, value1) (_, Nothing) = (i1, value1)
-      newFunc (i1, Just value1) (i2, Just value2) =
-        if (func value1 value2) == value1
-          then (i1, Just value1)
-          else (i2, Just value2)
-   in newFunc
+makeTSCompare comparator =
+  let newComparator (i1, Nothing) (i2, Nothing) = (i1, Nothing)
+      newComparator (i1, v1) (_, Nothing) = (i1, v1)
+      newComparator (_, Nothing) (i2, v2) = (i2, v2)
+      newComparator (i1, Just v1) (i2, Just v2) =
+        if (comparator v1 v2) == v1
+          then (i1, Just v1)
+          else (i2, Just v2)
+   in newComparator
 
 {-
 *Lesson20.TimeSeries> makeTSCompare max (3, Just 200) (4, Just 10)
